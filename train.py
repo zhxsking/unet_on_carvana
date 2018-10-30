@@ -16,7 +16,6 @@ import matplotlib.pyplot as plt
 from os.path import join
 from boxx import show
 
-
 class Option():
     """超参数定义类"""
     def __init__(self):
@@ -32,6 +31,8 @@ class Option():
         if torch.cuda.is_available():
             self.cuda = True
             torch.backends.cudnn.benchmark = True
+        self.pretrained = False
+        self.net_path = r"checkpoint\unet-epoch26.pkl"
     
 
 if __name__ == '__main__':
@@ -47,10 +48,15 @@ if __name__ == '__main__':
     if opt.cuda:
         unet = unet.cuda()
         loss_func = loss_func.cuda()
+    optimizer = torch.optim.Adam(unet.parameters(), lr=opt.lr)
+    # 加载预训练的参数
+    if opt.pretrained:
+        state = torch.load(opt.net_path)
+        unet.load_state_dict(state['net'])
+        optimizer.load_state_dict(state['optimizer'])
+    
     loss_list = []
     loss_list_big = []
-    optimizer = torch.optim.Adam(unet.parameters(), lr=opt.lr)
-    
     for epoch in range(opt.epochs):
         print('epoch {}/{} start!'.format(epoch+1, opt.epochs))
         unet.train()
@@ -64,11 +70,18 @@ if __name__ == '__main__':
             out = unet(img)
             out_prob = F.sigmoid(out)
             
+            if opt.cuda:
+                out_show = out.detach().cpu().numpy()[0][0]
+                out_prob_show = out_prob.detach().cpu().numpy()[0][0]
+            else:
+                out_show = out.detach().numpy()[0][0]
+                out_prob_show = out_prob.detach().numpy()[0][0]
+            
             plt.figure()
             plt.subplot(121)
-            plt.imshow(out.detach().numpy()[0][0], cmap='gray')
+            plt.imshow(out_show, cmap='gray')
             plt.subplot(122)
-            plt.imshow(out_prob.detach().numpy()[0][0], cmap='gray')
+            plt.imshow(out_prob_show, cmap='gray')
             plt.show()
             torchvision.utils.save_image(out_prob, join(opt.save_path, r'output\epoch{}-iter{}.jpg'.format(epoch+1, cnt)))
             
@@ -89,6 +102,7 @@ if __name__ == '__main__':
         if (epoch+1) % 1 == 0:
             state = {
                     'epoch': epoch+1,
+                    'loss_list': loss_list,
                     'optimizer': optimizer.state_dict(),
                     'net': unet.state_dict(),
                 }
