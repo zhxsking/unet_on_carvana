@@ -1,3 +1,6 @@
 
 *.pyc
 checkpoint/unet-epoch26.pkl
+*.jpg
+*.pkl
+checkpoint/output/epoch1-iter1.jpg
