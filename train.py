@@ -1,8 +1,7 @@
 # -*- coding: utf-8 -*-
 """
 Created on Mon Oct 29 10:03:56 2018
-
-@author: Administrator
+@author: zhxsking
 """
 
 import torch
@@ -24,8 +23,8 @@ class Option():
         self.lr = 0.01
         self.workers = 2
         self.in_dim = 3 #图片按rgb输入还是按灰度输入，可选1,3
-        self.dir_img = r"E:\pic\carvana\just_for_test\train"
-        self.dir_mask = r"E:\pic\carvana\just_for_test\train_masks"
+        self.dir_img = r"D:\pic\carvana\just_for_test\train"
+        self.dir_mask = r"D:\pic\carvana\just_for_test\train_masks"
         self.save_path = r"checkpoint"
         self.cuda = False
         if torch.cuda.is_available():
