@@ -1,0 +1,99 @@
+# -*- coding: utf-8 -*-
+"""
+Created on Mon Oct 29 10:03:56 2018
+
+@author: Administrator
+"""
+
+import torch
+import torch.nn as nn
+from torch.utils.data import DataLoader
+import torch.nn.functional as F
+import torchvision
+from carvana_dataset import CarvanaDataset
+from unet import UNet
+import matplotlib.pyplot as plt
+from os.path import join
+from boxx import show
+
+
+class Option():
+    """超参数定义类"""
+    def __init__(self):
+        self.epochs = 50
+        self.batchsize = 1
+        self.lr = 0.01
+        self.workers = 2
+        self.in_dim = 3 #图片按rgb输入还是按灰度输入，可选1,3
+        self.dir_img = r"D:\pic\carvana\just_for_test\train"
+        self.dir_mask = r"D:\pic\carvana\just_for_test\train_masks"
+        self.save_path = r"checkpoint"
+        self.cuda = False
+        if torch.cuda.is_available():
+            self.cuda = True
+            torch.backends.cudnn.benchmark = True
+    
+
+if __name__ == '__main__':
+    __spec__ = None
+    
+    opt = Option()
+    
+    dataset = CarvanaDataset(opt.dir_img, opt.dir_mask)
+    dataloader = DataLoader(dataset=dataset, batch_size=opt.batchsize, shuffle=True, num_workers=opt.workers)
+    
+    unet = UNet(in_dim=opt.in_dim)
+    loss_func = nn.MSELoss()
+    if opt.cuda:
+        unet = unet.cuda()
+        loss_func = loss_func.cuda()
+    loss_list = []
+    loss_list_big = []
+    optimizer = torch.optim.Adam(unet.parameters(), lr=opt.lr)
+    
+    for epoch in range(opt.epochs):
+        print('epoch {}/{} start!'.format(epoch+1, opt.epochs))
+        unet.train()
+        loss_temp = 0
+        
+        for cnt, (img, mask) in enumerate(dataloader, 1):
+            if opt.cuda:
+                img = img.cuda()
+                mask = mask.cuda()
+                
+            out = unet(img)
+            out_prob = F.sigmoid(out)
+            
+            plt.figure()
+            plt.subplot(121)
+            plt.imshow(out.detach().numpy()[0][0], cmap='gray')
+            plt.subplot(122)
+            plt.imshow(out_prob.detach().numpy()[0][0], cmap='gray')
+            plt.show()
+            torchvision.utils.save_image(out_prob, join(opt.save_path, r'output\epoch{}-iter{}.jpg'.format(epoch+1, cnt)))
+            
+            loss = loss_func(out_prob, mask)
+            print('epoch {}, iter {}, loss {}'.format(epoch+1, cnt, loss))
+            loss_temp += loss.item()
+            loss_list_big.append(loss.item())
+
+            optimizer.zero_grad()
+            loss.backward()
+            optimizer.step()
+        
+        loss_temp /= cnt
+        loss_list.append(loss_temp)
+        print('epoch {} done, average loss {}'.format(epoch+1, loss_temp))
+        
+        # 保存模型
+        if (epoch+1) % 1 == 0:
+            state = {
+                    'epoch': epoch+1,
+                    'optimizer': optimizer.state_dict(),
+                    'net': unet.state_dict(),
+                }
+            torch.save(state, join(opt.save_path, 'unet-epoch{}.pkl'.format(epoch+1)))
+            
+            
+            
+    
