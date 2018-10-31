@@ -23,8 +23,8 @@ class Option():
         self.lr = 0.01
         self.workers = 2
         self.in_dim = 3 #图片按rgb输入还是按灰度输入，可选1,3
-        self.dir_img = r"D:\pic\carvana\just_for_test\train"
-        self.dir_mask = r"D:\pic\carvana\just_for_test\train_masks"
+        self.dir_img = r"E:\pic\carvana\just_for_test\train"
+        self.dir_mask = r"E:\pic\carvana\just_for_test\train_masks"
         self.save_path = r"checkpoint"
         self.cuda = False
         if torch.cuda.is_available():
@@ -32,7 +32,7 @@ class Option():
             torch.backends.cudnn.benchmark = True
         self.pretrained = False
         self.net_path = r"checkpoint\unet-epoch26.pkl"
-    
+
 
 if __name__ == '__main__':
     __spec__ = None
@@ -57,61 +57,57 @@ if __name__ == '__main__':
     loss_list = []
     loss_list_big = []
     
-    try:
-        for epoch in range(opt.epochs):
-            print('epoch {}/{} start...'.format(epoch+1, opt.epochs))
-            unet.train()
-            loss_temp = 0
-            
-            for cnt, (img, mask) in enumerate(dataloader, 1):
-                if opt.cuda:
-                    img = img.cuda()
-                    mask = mask.cuda()
-                    
-                out = unet(img)
-                out_prob = F.sigmoid(out)
+    for epoch in range(opt.epochs):
+        print('epoch {}/{} start...'.format(epoch+1, opt.epochs))
+        unet.train()
+        loss_temp = 0
+        
+        for cnt, (img, mask) in enumerate(dataloader, 1):
+            if opt.cuda:
+                img = img.cuda()
+                mask = mask.cuda()
                 
-                if opt.cuda:
-                    out_show = out.detach().cpu().numpy()[0][0]
-                    out_prob_show = out_prob.detach().cpu().numpy()[0][0]
-                else:
-                    out_show = out.detach().numpy()[0][0]
-                    out_prob_show = out_prob.detach().numpy()[0][0]
-                
-                plt.figure()
-                plt.subplot(121)
-                plt.imshow(out_show, cmap='gray')
-                plt.subplot(122)
-                plt.imshow(out_prob_show, cmap='gray')
-                plt.show()
-                torchvision.utils.save_image(out_prob, join(opt.save_path, r'output\epoch{}-iter{}.jpg'.format(epoch+1, cnt)))
-                
-                loss = loss_func(out_prob, mask)
-                print('epoch {}, iter {}, loss {}'.format(epoch+1, cnt, loss))
-                loss_temp += loss.item()
-                loss_list_big.append(loss.item())
-    
-                optimizer.zero_grad()
-                loss.backward()
-                optimizer.step()
+            out = unet(img)
+            out_prob = F.sigmoid(out)
             
-            loss_temp /= cnt
-            loss_list.append(loss_temp)
-            print('epoch {} done, average loss {}'.format(epoch+1, loss_temp))
+            if opt.cuda:
+                out_show = out.detach().cpu().numpy()[0][0]
+                out_prob_show = out_prob.detach().cpu().numpy()[0][0]
+            else:
+                out_show = out.detach().numpy()[0][0]
+                out_prob_show = out_prob.detach().numpy()[0][0]
             
-            # 保存模型
-            if (epoch+1) % 1 == 0:
-                state = {
-                        'epoch': epoch+1,
-                        'loss_list': loss_list,
-                        'optimizer': optimizer.state_dict(),
-                        'net': unet.state_dict(),
-                    }
-                torch.save(state, join(opt.save_path, 'unet-epoch{}.pkl'.format(epoch+1)))
+            plt.figure()
+            plt.subplot(121)
+            plt.imshow(out_show, cmap='gray')
+            plt.subplot(122)
+            plt.imshow(out_prob_show, cmap='gray')
+            plt.show()
+            torchvision.utils.save_image(out_prob, join(opt.save_path, r'output\epoch{}-iter{}.jpg'.format(epoch+1, cnt)))
             
-    except KeyboardInterrupt:
-        print('interrupt!')
-        sys.exit(0)
+            loss = loss_func(out_prob, mask)
+            print('epoch {}, iter {}, loss {}'.format(epoch+1, cnt, loss))
+            loss_temp += loss.item()
+            loss_list_big.append(loss.item())
+
+            optimizer.zero_grad()
+            loss.backward()
+            optimizer.step()
+        
+        loss_temp /= cnt
+        loss_list.append(loss_temp)
+        print('epoch {} done, average loss {}'.format(epoch+1, loss_temp))
+        
+        # 保存模型
+        if (epoch+1) % 1 == 0:
+            state = {
+                    'epoch': epoch+1,
+                    'loss_list': loss_list,
+                    'optimizer': optimizer.state_dict(),
+                    'net': unet.state_dict(),
+                }
+            torch.save(state, join(opt.save_path, 'unet-epoch{}.pkl'.format(epoch+1)))
+
             
             
             
