@@ -29,7 +29,6 @@ class Option():
         if torch.cuda.is_available():
             self.cuda = True
             torch.backends.cudnn.benchmark = True
-            torch.cuda.empty_cache()
         self.pretrained = False
         self.net_path = r"checkpoint\unet-epoch26.pkl"
 
