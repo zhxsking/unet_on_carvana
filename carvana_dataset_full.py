@@ -37,12 +37,7 @@ class CarvanaDataset(Dataset):
         img_right = img.crop((img.width-img.height, 0, img.width, img.height))
         mask_right = mask.crop((mask.width-mask.height, 0, mask.width, mask.height))
         
-        new_size = tuple(map(lambda x: int(x * self.scale), (img_left.height, img_left.width)))
-        
-        process = transforms.Compose([
-                transforms.Resize(new_size),
-                transforms.ToTensor(),
-                ])
+        process = transforms.ToTensor()
         
         img_left = process(img_left)
         mask_left = process(mask_left)
