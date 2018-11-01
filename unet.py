@@ -86,6 +86,8 @@ class UNet(nn.Module):
 
 if __name__ == '__main__':
     unet = UNet(in_dim=1)
+    if torch.cuda.is_available():
+        unet = unet.cuda()
 #    print(unet)
 
 #    test_x = torch.FloatTensor(1, 1, 256, 256)
