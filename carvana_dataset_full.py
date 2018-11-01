@@ -37,12 +37,10 @@ class CarvanaDataset(Dataset):
         img_right = img.crop((img.width-img.height, 0, img.width, img.height))
         mask_right = mask.crop((mask.width-mask.height, 0, mask.width, mask.height))
         
-        process = transforms.ToTensor()
-        
-        img_left = process(img_left)
-        mask_left = process(mask_left)
-        img_right = process(img_right)
-        mask_right = process(mask_right)
+        img_left = transforms.functional.to_tensor(img_left)
+        mask_left = transforms.functional.to_tensor(mask_left)
+        img_right = transforms.functional.to_tensor(img_right)
+        mask_right = transforms.functional.to_tensor(mask_right)
         
         return img_left, mask_left, img_right, mask_right
     

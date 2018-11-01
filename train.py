@@ -22,7 +22,8 @@ class Option():
         self.batchsize = 1
         self.lr = 0.01
         self.workers = 2
-        self.in_dim = 3 #图片按rgb输入还是按灰度输入，可选1,3
+        self.in_dim = 3 # 图片按rgb输入还是按灰度输入，可选1,3
+        self.scale = 0.5 # 图片缩放
         self.dir_img = r"E:\pic\carvana\just_for_test\train"
         self.dir_mask = r"E:\pic\carvana\just_for_test\train_masks"
         self.save_path = r"checkpoint"
@@ -39,7 +40,7 @@ if __name__ == '__main__':
     
     opt = Option()
     
-    dataset = CarvanaDataset(opt.dir_img, opt.dir_mask)
+    dataset = CarvanaDataset(opt.dir_img, opt.dir_mask, opt.scale)
     dataloader = DataLoader(dataset=dataset, batch_size=opt.batchsize, shuffle=True, num_workers=opt.workers)
     
     unet = UNet(in_dim=opt.in_dim)
@@ -53,13 +54,13 @@ if __name__ == '__main__':
         state = torch.load(opt.net_path)
         unet.load_state_dict(state['net'])
         optimizer.load_state_dict(state['optimizer'])
+    unet.train()
     
     loss_list = []
     loss_list_big = []
     try:
         for epoch in range(opt.epochs):
             print('epoch {}/{} start...'.format(epoch+1, opt.epochs))
-            unet.train()
             loss_temp = 0
             
             for cnt, (img, mask) in enumerate(dataloader, 1):
