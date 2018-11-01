@@ -40,7 +40,7 @@ if __name__ == '__main__':
     
     opt = Option()
     
-    dataset = CarvanaDataset(opt.dir_img, opt.dir_mask, opt.scale)
+    dataset = CarvanaDataset(opt.dir_img, opt.dir_mask, scale=opt.scale)
     dataloader = DataLoader(dataset=dataset, batch_size=opt.batchsize, shuffle=True, num_workers=opt.workers)
     
     unet = UNet(in_dim=opt.in_dim)
