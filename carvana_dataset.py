@@ -56,8 +56,8 @@ if __name__ == '__main__':
 
     torch.manual_seed(1)
     
-    dir_img = r"D:\pic\carvana\just_for_test\train"
-    dir_mask = r"D:\pic\carvana\just_for_test\train_masks"
+    dir_img = r"E:\pic\carvana\just_for_test\train"
+    dir_mask = r"E:\pic\carvana\just_for_test\train_masks"
     dataset = CarvanaDataset(dir_img, dir_mask)
     dataloader = DataLoader(dataset=dataset, batch_size=1, shuffle=True, num_workers=2)
     

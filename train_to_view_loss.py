@@ -2,6 +2,7 @@
 """
 Created on Mon Oct 29 10:03:56 2018
 @author: zhxsking
+可视化loss变化，用于调参
 """
 
 import torch
@@ -21,6 +22,7 @@ class Option():
         self.epochs = 50
         self.batchsize = 1
         self.lr = 1e-3
+        self.workers = 2
         self.in_dim = 3 # 图片按rgb输入还是按灰度输入，可选1,3
         self.scale = 0.5 # 图片缩放
         self.dir_img = r"E:\pic\carvana\just_for_test\train"
@@ -57,6 +59,8 @@ if __name__ == '__main__':
     
     loss_list = []
     loss_list_big = []
+    plt.ion()
+    plt.show()
     try:
         for epoch in range(opt.epochs):
             print('epoch {}/{} start...'.format(epoch+1, opt.epochs))
@@ -69,26 +73,16 @@ if __name__ == '__main__':
                     
                 out = unet(img)
                 out_prob = F.sigmoid(out)
-                
-                if opt.cuda:
-                    out_show = out.detach().cpu().numpy()[0][0]
-                    out_prob_show = out_prob.detach().cpu().numpy()[0][0]
-                else:
-                    out_show = out.detach().numpy()[0][0]
-                    out_prob_show = out_prob.detach().numpy()[0][0]
-                
-                plt.figure()
-                plt.subplot(121)
-                plt.imshow(out_show, cmap='gray')
-                plt.subplot(122)
-                plt.imshow(out_prob_show, cmap='gray')
-                plt.show()
-                torchvision.utils.save_image(out_prob, join(opt.save_path, r'output\epoch{}-iter{}.jpg'.format(epoch+1, cnt)))
-                
+            
                 loss = loss_func(out, mask)
                 print('epoch {}, iter {}, loss {}'.format(epoch+1, cnt, loss))
                 loss_temp += loss.item()
                 loss_list_big.append(loss.item())
+                
+#                plt.cla()
+#                plt.subplot(121)
+                plt.plot(loss_list_big)
+                plt.pause(0.01)
     
                 optimizer.zero_grad()
                 loss.backward()
@@ -96,32 +90,13 @@ if __name__ == '__main__':
             
             loss_temp /= cnt
             loss_list.append(loss_temp)
+#            plt.subplot(122)
+#            plt.plot(loss_list)
+#            plt.pause(0.01)
             print('epoch {} done, average loss {}'.format(epoch+1, loss_temp))
-            
-            # 保存模型
-            if (epoch+1) % 1 == 0:
-                state = {
-                        'epoch': epoch+1,
-                        'loss_list': loss_list,
-                        'optimizer': optimizer.state_dict(),
-                        'net': unet.state_dict(),
-                    }
-                torch.save(state, join(opt.save_path, 'unet-epoch{}.pkl'.format(epoch+1)))
+        plt.ioff()
     except KeyboardInterrupt:
         print('Interrupt!')
-        plt.figure()
-        plt.subplot(121)
-        plt.plot(loss_list)
-        plt.subplot(122)
-        plt.plot(loss_list_big)
-        plt.show()
-        state = {
-                'epoch': epoch+1,
-                'loss_list': loss_list,
-                'optimizer': optimizer.state_dict(),
-                'net': unet.state_dict(),
-            }
-        torch.save(state, join(opt.save_path, 'unet-epoch{}-iter{}.pkl'.format(epoch+1,cnt)))
         sys.exit(0)
         
 
