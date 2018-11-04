@@ -116,6 +116,13 @@ if __name__ == '__main__':
         plt.subplot(122)
         plt.plot(loss_list_big)
         plt.show()
+        state = {
+                'epoch': epoch+1,
+                'loss_list': loss_list,
+                'optimizer': optimizer.state_dict(),
+                'net': unet.state_dict(),
+            }
+        torch.save(state, join(opt.save_path, 'unet-epoch{}-iter{}.pkl'.format(epoch+1,cnt)))
         sys.exit(0)
         
 
