@@ -23,6 +23,7 @@ class Option():
         self.lr = 1e-3
         self.in_dim = 3 # 图片按rgb输入还是按灰度输入，可选1,3
         self.scale = 0.5 # 图片缩放
+        self.num_workers = 4 # 多进程读取data
         self.dir_img = r"E:\pic\carvana\just_for_test\train"
         self.dir_mask = r"E:\pic\carvana\just_for_test\train_masks"
         self.save_path = r"checkpoint"
